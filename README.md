@@ -4,7 +4,7 @@ Tadpole is the repository that hosts the core of the operating system distributi
 This repository is the base skeleton on which all other OS distributions are created.
 
 Tadpole is automatically created from Larva (https://github.com/mynewt/larva) using the 
-"make\_tadpole" script (scripts/make\_tadpole).
+"hatch\_tadpole.sh" script (larva/scripts/hatch\_tadpole.sh).
 
 It contains the following components: 
 
@@ -24,7 +24,7 @@ new repository for development.
 By default, the newt tool will use the tadpool skeleton when creating a new 
 repository: 
 
-  $ newt create repo <your\_project> 
+    $ newt create repo <your\_project> 
 
 This will create a new project with the name of <your\_project> that has 
 the layout of the tadpole repository. 
@@ -35,10 +35,10 @@ Development of the core operating system is done on larva, which contains the
 core of the OS.  In order to update the tadpole repository, the make\_tadpole
 script must be run: 
 
- $ cd larva;
- $ ./scripts/make\_tadpole --dir . --tadpole\_dir ../tadpole 
+    $ cd larva;
+    $ ./scripts/hatch\_tadpole.sh ~/dev/larva ~/dev/tadpole 
 
-Where ../tadpole is the checked out git repository where tadpole exists.  
+Where ~/dev/larva is your larva directory, and ~/dev/tadpole is your tadpole directory. 
 
 ## Discussion 
 
