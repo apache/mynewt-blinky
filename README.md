@@ -24,9 +24,9 @@ new repository for development.
 By default, the newt tool will use the tadpool skeleton when creating a new 
 repository: 
 
-    $ newt create repo <your\_project> 
+    $ newt create repo <your_project> 
 
-This will create a new project with the name of <your\_project> that has 
+This will create a new project with the name of your\_project, which has 
 the layout of the tadpole repository. 
 
 ## Updating Tadpole 
@@ -36,7 +36,7 @@ core of the OS.  In order to update the tadpole repository, the make\_tadpole
 script must be run: 
 
     $ cd larva;
-    $ ./scripts/hatch\_tadpole.sh ~/dev/larva ~/dev/tadpole 
+    $ ./scripts/hatch_tadpole.sh ~/dev/larva ~/dev/tadpole 
 
 Where ~/dev/larva is your larva directory, and ~/dev/tadpole is your tadpole directory. 
 
