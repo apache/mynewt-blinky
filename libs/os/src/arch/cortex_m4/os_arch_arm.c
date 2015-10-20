@@ -183,11 +183,17 @@ os_error_t
 os_arch_os_init(void)
 {
     os_error_t err;
+    int i;
 
     /* Cannot be called within an ISR */
     err = OS_ERR_IN_ISR;
     if (__get_IPSR() == 0) {
         err = OS_OK;
+
+        /* Drop priority for all interrupts */
+        for (i = 0; i < sizeof(NVIC->IP); i++) {
+            NVIC->IP[i] = 0xff;
+        }
 
         /* Call bsp related OS initializations */
         os_bsp_init();
@@ -205,7 +211,7 @@ os_arch_os_init(void)
          */
         os_set_env();
 
-        /* Check if priviliged or not */
+        /* Check if priviledged or not */
         if ((__get_CONTROL() & 1) == 0) {
             os_arch_init();
         } else {
@@ -218,8 +224,10 @@ os_arch_os_init(void)
 
 /**
  * os systick init
- *
+ *  
  * Initializes systick for the MCU
+ * 
+ * @param os_tick_usecs The number of microseconds in an os time tick
  */
 static void
 os_systick_init(uint32_t os_tick_usecs)
@@ -250,8 +258,7 @@ os_arch_start(void)
     __set_PSP((uint32_t)t->t_stackptr + offsetof(struct stack_frame, r0));
 
     /* Intitialize and start system clock timer */
-
-    os_systick_init(OS_TIME_TICK * 1000);
+    os_systick_init(1000000 / OS_TICKS_PER_SEC);
 
     /* Mark the OS as started, right before we run our first task */
     g_os_started = 1;

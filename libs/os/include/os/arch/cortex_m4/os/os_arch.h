@@ -27,8 +27,7 @@ struct os_task;
 #define OS_RUN_PRIV         (1)
 
 /* Time tick in miliseconds that the OS runs */
-#define OS_TIME_TICK        (1)
-#define OS_TICKS_PER_SEC    (OS_TIME_TICK * 1000)
+#define OS_TICKS_PER_SEC    (1000)
 
 /* CPU status register */
 typedef uint32_t os_sr_t;
@@ -36,8 +35,14 @@ typedef uint32_t os_sr_t;
 #define OS_STACK_PATTERN    (0xdeadbeef)
 
 typedef uint32_t os_stack_t;
-#define OS_ALIGNMENT        (4) 
+#define OS_ALIGNMENT        (4)
 #define OS_STACK_ALIGNMENT  (8)
+
+/*
+ * Stack sizes for common OS tasks
+ */
+#define OS_SANITY_STACK_SIZE (64)
+#define OS_IDLE_STACK_SIZE (32)
 
 #define OS_STACK_ALIGN(__nmemb) \
     (OS_ALIGN((__nmemb), OS_STACK_ALIGNMENT))
