@@ -17,6 +17,8 @@
 #include "os/os.h"
 #include "os/os_arch.h"
 
+#include <bsp/cmsis_nvic.h>
+
 /* Initial program status register */
 #define INITIAL_xPSR    0x01000000
 
@@ -49,9 +51,6 @@ struct stack_frame {
     uint32_t    pc;
     uint32_t    xpsr;
 };
-
-int     die_line;
-char    *die_module;
 
 #define SVC_ArgN(n) \
   register int __r##n __asm("r"#n);
@@ -100,6 +99,8 @@ timer_handler(void)
 void
 os_arch_ctx_sw(struct os_task *t)
 {
+    os_sched_ctx_sw_hook(t);
+
     /* Set PendSV interrupt pending bit to force context switch */
     SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
@@ -107,6 +108,8 @@ os_arch_ctx_sw(struct os_task *t)
 void
 os_arch_ctx_sw_isr(struct os_task *t)
 {
+    os_sched_ctx_sw_hook(t);
+
     /* Set PendSV interrupt pending bit to force context switch */
     SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
@@ -126,15 +129,6 @@ os_arch_restore_sr(os_sr_t isr_ctx)
 {
     if (!isr_ctx) {
         __enable_irq();
-    }
-}
-
-void
-_Die(char *file, int line)
-{
-    die_line = line;
-    die_module = file;
-    while (1) {
     }
 }
 
@@ -168,6 +162,10 @@ os_arch_task_stack_init(struct os_task *t, os_stack_t *stack_top, int size)
 void
 os_arch_init(void)
 {
+    /*
+     * Trap on divide-by-zero.
+     */
+    SCB->CCR |= SCB_CCR_DIV_0_TRP_Msk;
     os_init_idle_task();
 }
 
@@ -193,6 +191,19 @@ os_arch_os_init(void)
         /* Drop priority for all interrupts */
         for (i = 0; i < sizeof(NVIC->IP); i++) {
             NVIC->IP[i] = 0xff;
+        }
+
+        /*
+         * Install default interrupt handler, which'll print out system
+         * state at the time of the interrupt, and few other regs which
+         * should help in trying to figure out what went wrong.
+         */
+        NVIC_SetVector(-13, (uint32_t)os_default_irq_asm); /* Hardfault */
+        NVIC_SetVector(MemoryManagement_IRQn, (uint32_t)os_default_irq_asm);
+        NVIC_SetVector(BusFault_IRQn, (uint32_t)os_default_irq_asm);
+        NVIC_SetVector(UsageFault_IRQn, (uint32_t)os_default_irq_asm);
+        for (i = 0; i < NVIC_NUM_VECTORS - NVIC_USER_IRQ_OFFSET; i++) {
+            NVIC_SetVector(i, (uint32_t)os_default_irq_asm);
         }
 
         /* Call bsp related OS initializations */
@@ -224,9 +235,9 @@ os_arch_os_init(void)
 
 /**
  * os systick init
- *  
+ *
  * Initializes systick for the MCU
- * 
+ *
  * @param os_tick_usecs The number of microseconds in an os time tick
  */
 static void
@@ -283,7 +294,7 @@ os_arch_os_start(void)
 
     err = OS_ERR_IN_ISR;
     if (__get_IPSR() == 0) {
-        /* 
+        /*
          * The following switch statement is really just a sanity check to
          * insure that the os initialization routine was called prior to the
          * os start routine.

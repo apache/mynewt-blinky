@@ -41,7 +41,7 @@ typedef void (*hal_uart_tx_done)(void *arg);
 typedef int (*hal_uart_rx_char)(void *arg, uint8_t byte);
 
 /**
- * hal uart init
+ * hal uart init cbs
  *
  * Initializes given uart. Mapping of logical UART number to physical
  * UART/GPIO pins is in BSP.
@@ -84,5 +84,14 @@ void hal_uart_start_tx(int uart);
  * that no more data can be accepted.
  */
 void hal_uart_start_rx(int uart);
+
+/**
+ * hal uart blocking tx
+ *
+ * This is type of write where UART has to block until character has been sent.
+ * Used when printing diag output from system crash.
+ * Must be called with interrupts disabled.
+ */
+void hal_uart_blocking_tx(int uart, uint8_t byte);
 
 #endif /* H_HAL_UART_H_ */

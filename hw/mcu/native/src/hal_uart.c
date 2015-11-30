@@ -18,14 +18,20 @@
 #include "hal/hal_uart.h"
 #include "bsp/bsp.h"
 
+#ifdef MN_LINUX
+#include <pty.h>
+#endif
+#ifdef MN_OSX
 #include <util.h>
+#endif
+#include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
 
 #define UART_MAX_BYTES_PER_POLL	64
-#define UART_POLLER_STACK_SZ	1024
+#define UART_POLLER_STACK_SZ	(1024)
 #define UART_POLLER_PRIO	0
 
 struct uart {
@@ -117,23 +123,33 @@ uart_poller(void *arg)
     }
 }
 
-static int
-uart_pty(void)
+static void
+set_nonblock(int fd)
 {
-    int fd;
-    int loop_slave;
     int flags;
-    struct termios tios;
-    char pty_name[32];
 
-    if (openpty(&fd, &loop_slave, pty_name, NULL, NULL) < 0) {
-        perror("openpty() failed");
-        return -1;
+    flags = fcntl(fd, F_GETFL);
+    if (flags == -1) {
+        const char msg[] = "fcntl(F_GETFL) fail";
+        write(1, msg, sizeof(msg));
+        return;
     }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        const char msg[] = "fcntl(F_SETFL) fail";
+        write(1, msg, sizeof(msg));
+        return;
+    }
+}
 
-    if (tcgetattr(loop_slave, &tios)) {
-        perror("tcgetattr() failed");
-        goto err;
+static int
+uart_set_attr(int fd)
+{
+    struct termios tios;
+
+    if (tcgetattr(fd, &tios)) {
+        const char msg[] = "tcgetattr() failed";
+        write(1, msg, sizeof(msg));
+        return -1;
     }
 
     tios.c_cflag &= ~(CSIZE | CSTOPB | PARENB);
@@ -141,22 +157,34 @@ uart_pty(void)
     tios.c_iflag = IGNPAR | IXON;
     tios.c_oflag = 0;
     tios.c_lflag = 0;
-    if (tcsetattr(loop_slave, TCSAFLUSH, &tios) < 0) {
-        perror("tcsetattr() failed");
+    if (tcsetattr(fd, TCSAFLUSH, &tios) < 0) {
+        const char msg[] = "tcsetattr() failed";
+        write(1, msg, sizeof(msg));
+        return -1;
+    }
+    return 0;
+}
+
+static int
+uart_pty(int port)
+{
+    int fd;
+    int loop_slave;
+    char pty_name[32];
+    char msg[64];
+
+    if (openpty(&fd, &loop_slave, pty_name, NULL, NULL) < 0) {
+        const char msg[] = "openpty() failed";
+        write(1, msg, sizeof(msg));
+        return -1;
+    }
+
+    if (uart_set_attr(loop_slave)) {
         goto err;
     }
 
-    flags = fcntl(fd, F_GETFL);
-    if (flags == -1) {
-        perror("fcntl(F_GETFL) fail");
-        goto err;
-    }
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-        perror("fcntl(F_SETFL) fail");
-        goto err;
-    }
-
-    printf("console at %s\n", pty_name);
+    snprintf(msg, sizeof(msg), "uart%d at %s\n", port, pty_name);
+    write(1, msg, strlen(msg));
     return fd;
 err:
     close(fd);
@@ -181,6 +209,17 @@ void
 hal_uart_start_rx(int port)
 {
     /* nothing to do here */
+}
+
+void
+hal_uart_blocking_tx(int port, uint8_t data)
+{
+    if (port >= UART_CNT || uarts[port].u_open == 0) {
+        return;
+    }
+
+    /* XXX: Count statistics and add error checking here. */
+    (void) write(uarts[port].u_fd, &data, sizeof(data));
 }
 
 int
@@ -228,10 +267,13 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     if (uart->u_open) {
         return -1;
     }
-    uart->u_fd = uart_pty();
+
+    uart->u_fd = uart_pty(port);
     if (uart->u_fd < 0) {
         return -1;
     }
+    set_nonblock(uart->u_fd);
+
     uart->u_open = 1;
     return 0;
 }

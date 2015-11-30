@@ -57,9 +57,6 @@ typedef uint32_t os_stack_t;
 #define sec_bss_core    __attribute__((section(".bss.core")))
 #define sec_bss_nz_core __attribute__((section(".bss.core.nz")))
 
-/* Define "assert" funtion */
-void _Die(char *file, int line);
-
 os_stack_t *os_arch_task_stack_init(struct os_task *, os_stack_t *, int);
 void timer_handler(void);
 void os_arch_ctx_sw(struct os_task *);
@@ -72,6 +69,7 @@ os_error_t os_arch_os_init(void);
 os_error_t os_arch_os_start(void);
 void os_set_env(void);
 void os_arch_init_task_stack(os_stack_t *sf);
+void os_default_irq_asm(void);
 
 /* External function prototypes supplied by BSP */
 void os_bsp_systick_init(uint32_t os_tick_usecs);

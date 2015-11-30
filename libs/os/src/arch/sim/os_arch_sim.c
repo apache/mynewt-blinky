@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -152,6 +153,8 @@ os_arch_ctx_sw(struct os_task *next_t)
         }
     }
 
+    os_sched_ctx_sw_hook(next_t);
+
     os_sched_set_current_task(next_t);
 
     sf = (struct stack_frame *) next_t->t_stackptr;
@@ -195,6 +198,8 @@ os_arch_ctx_sw_isr(struct os_task *next_t)
     }
 
     isr_state(&block_isr_off, NULL);
+
+    os_sched_ctx_sw_hook(next_t);
 
     os_sched_set_current_task(next_t);
     
@@ -294,8 +299,9 @@ start_timer(void)
 
     rc = setitimer(ITIMER_VIRTUAL, &it, NULL);
     if (rc != 0) {
-        perror("Cannot set itimer");
-        abort();
+        const char msg[] = "Cannot set itimer";
+        write(2, msg, sizeof(msg));
+        _exit(1);
     }
 }
 
@@ -308,7 +314,10 @@ os_arch_os_init(void)
     TAILQ_INIT(&g_os_sleep_list);
 
     os_init_idle_task();
-    os_sanity_task_init(); 
+    os_sanity_task_init();
+
+    os_bsp_init();
+
     return OS_OK;
 }
 

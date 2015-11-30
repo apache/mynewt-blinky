@@ -17,6 +17,6 @@
 #ifndef H_HAL_SYSTEM_
 #define H_HAL_SYSTEM_
 
-void system_reset(void);
+void system_reset(void) __attribute((noreturn));
 
 #endif
