@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef __UTIL_BASE64_H 
+#define __UTIL_BASE64_H 
 
-#ifndef H_HAL_SYSTEM_
-#define H_HAL_SYSTEM_
+#include <stdint.h>
 
-/*
- * System reset.
- */
-void system_reset(void) __attribute((noreturn));
+int base64_encode(const void *, int, char *, uint8_t);
+int base64_decode(const char *, void *buf);
 
-/*
- * Called by bootloader to start loaded program.
- */
-void system_start(void *img_start) __attribute((noreturn));
+#define BASE64_ENCODE_SIZE(__size) (((__size) * (4 / 3)) + 4)
 
-#endif
+#endif /* __UTIL_BASE64_H__ */

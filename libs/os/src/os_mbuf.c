@@ -54,6 +54,9 @@
 
 #include <string.h>
 
+STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list = 
+    STAILQ_HEAD_INITIALIZER(g_msys_pool_list);
+
 int 
 os_mqueue_init(struct os_mqueue *mq, void *arg)
 {
@@ -84,7 +87,11 @@ os_mqueue_get(struct os_mqueue *mq)
     }
     OS_EXIT_CRITICAL(sr);
 
-    m = OS_MBUF_PKTHDR_TO_MBUF(mp);
+    if (mp) {
+        m = OS_MBUF_PKTHDR_TO_MBUF(mp);
+    } else {
+        m = NULL;
+    }
 
     return (m);
 }
@@ -115,6 +122,83 @@ os_mqueue_put(struct os_mqueue *mq, struct os_eventq *evq, struct os_mbuf *m)
     return (0);
 err:
     return (rc);
+}
+
+int 
+os_msys_register(struct os_mbuf_pool *new_pool)  
+{
+    struct os_mbuf_pool *pool;
+
+    pool = NULL;
+    STAILQ_FOREACH(pool, &g_msys_pool_list, omp_next) {
+        if (new_pool->omp_databuf_len > pool->omp_databuf_len) {
+            break;
+        }
+    }
+
+    if (pool) {
+        STAILQ_INSERT_AFTER(&g_msys_pool_list, pool, new_pool, omp_next);
+    } else {
+        STAILQ_INSERT_TAIL(&g_msys_pool_list, new_pool, omp_next);
+    }
+
+    return (0);
+}
+
+static struct os_mbuf_pool *
+_os_msys_find_pool(uint16_t dsize) 
+{
+    struct os_mbuf_pool *pool;
+
+    pool = NULL;
+    STAILQ_FOREACH(pool, &g_msys_pool_list, omp_next) {
+        if (dsize <= pool->omp_databuf_len) {
+            break;
+        }
+    }
+
+    if (!pool) {
+        pool = STAILQ_LAST(&g_msys_pool_list, os_mbuf_pool, omp_next);
+    }
+
+    return (pool);
+}
+
+
+
+struct os_mbuf *
+os_msys_get(uint16_t dsize, uint16_t leadingspace)
+{
+    struct os_mbuf *m;
+    struct os_mbuf_pool *pool;
+
+    pool = _os_msys_find_pool(dsize);
+    if (!pool) {
+        goto err;
+    }
+
+    m = os_mbuf_get(pool, leadingspace);
+    return (m);
+err:
+    return (NULL);
+}
+
+
+struct os_mbuf *
+os_msys_get_pkthdr(uint16_t dsize, uint16_t pkthdr_len)
+{
+    struct os_mbuf *m;
+    struct os_mbuf_pool *pool;
+
+    pool = _os_msys_find_pool(dsize + pkthdr_len);
+    if (!pool) {
+        goto err;
+    }
+    
+    m = os_mbuf_get_pkthdr(pool, pkthdr_len);
+    return (m);
+err:
+    return (NULL);
 }
 
 
@@ -161,6 +245,7 @@ os_mbuf_get(struct os_mbuf_pool *omp, uint16_t leadingspace)
 
     SLIST_NEXT(om, om_next) = NULL;
     om->om_flags = 0;
+    om->om_pkthdr_len = 0;
     om->om_len = 0;
     om->om_data = (&om->om_databuf[0] + leadingspace);
     om->om_omp = omp;
@@ -204,9 +289,11 @@ os_mbuf_free(struct os_mbuf *om)
 {
     int rc;
 
-    rc = os_memblock_put(om->om_omp->omp_pool, om);
-    if (rc != 0) {
-        goto err;
+    if (om->om_omp != NULL) {
+        rc = os_memblock_put(om->om_omp->omp_pool, om);
+        if (rc != 0) {
+            goto err;
+        }
     }
 
     return (0);
@@ -829,8 +916,6 @@ os_mbuf_extend(struct os_mbuf *om, uint16_t len)
     return data;
 }
 
-#if 0
-
 /**
  * Rearrange a mbuf chain so that len bytes are contiguous, 
  * and in the data area of an mbuf (so that OS_MBUF_DATA() will 
@@ -851,40 +936,58 @@ struct os_mbuf *
 os_mbuf_pullup(struct os_mbuf *om, uint16_t len)
 {
     struct os_mbuf_pool *omp;
-    struct os_mbuf *newm;
+    struct os_mbuf *next;
+    struct os_mbuf *om2;
+    int count;
+    int space;
 
     omp = om->om_omp;
 
-    if (len > omp->omp_databuf_len) {
-        goto err;
-    }
-
-    /* Is 'n' bytes already contiguous? */
-    if (((uint8_t *) &om->om_databuf[0] + omp->omp_databuf_len) - 
-            OS_MBUF_DATA(om, uint8_t *) >= len) {
-        newm = om;
-        goto done;
-    }
-
-    /* Nope, OK. Allocate a new buffer, and then go through and copy 'n' 
-     * bytes into that buffer.
+    /*
+     * If first mbuf has no cluster, and has room for len bytes
+     * without shifting current data, pullup into it,
+     * otherwise allocate a new mbuf to prepend to the chain.
      */
-    newm = os_mbuf_get(omp, 0);
-    if (!newm) {
-        goto err;
+    if (om->om_len >= len) {
+        return (om);
     }
-
-    written = 0; 
-    while (written < len
-
-
-done:
-    return (newm);
-err:
-    if (om) {
-        os_mbuf_free_chain(om);
+    if (om->om_len + OS_MBUF_TRAILINGSPACE(om) >= len &&
+        SLIST_NEXT(om, om_next)) {
+        om2 = om;
+        om = SLIST_NEXT(om, om_next);
+        len -= om2->om_len;
+    } else {
+        if (len > omp->omp_databuf_len - om->om_pkthdr_len)
+            goto bad;
+        om2 = os_mbuf_get(omp, 0);
+        if (om2 == NULL)
+            goto bad;
+        if (OS_MBUF_IS_PKTHDR(om))
+            _os_mbuf_copypkthdr(om2, om);
     }
-
+    space = OS_MBUF_TRAILINGSPACE(om2);
+    do {
+        count = min(min(len, space), om->om_len);
+        memcpy(om2->om_data + om2->om_len, om->om_data, count);
+        len -= count;
+        om2->om_len += count;
+        om->om_len -= count;
+        space -= count;
+        if (om->om_len)
+            om->om_data += count;
+        else {
+            next = SLIST_NEXT(om, om_next);
+            os_mbuf_free(om);
+            om = next;
+        }
+    } while (len > 0 && om);
+    if (len > 0) {
+        os_mbuf_free(om2);
+        goto bad;
+    }
+    SLIST_NEXT(om2, om_next) = om;
+    return (om2);
+bad:
+    os_mbuf_free_chain(om);
     return (NULL);
 }
-#endif
