@@ -42,5 +42,4 @@ Where ~/dev/larva is your larva directory, and ~/dev/tadpole is your tadpole dir
 
 ## Discussion 
 
-For discussion on tadpole, please use the stack-dev mailing list (stack-dev@googlegroups.org), 
-or join the discussion on Slack (https://newt-os.slack.com/) 
+For discussion on tadpole, please use the stack-dev mailing list (dev@mynewt.incubator.apache.org).
