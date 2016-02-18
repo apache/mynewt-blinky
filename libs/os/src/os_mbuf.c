@@ -1,17 +1,20 @@
 /**
- * Copyright (c) Runtime Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 /*
@@ -145,6 +148,15 @@ os_msys_register(struct os_mbuf_pool *new_pool)
     return (0);
 }
 
+/**
+ * De-registers all mbuf pools from msys.
+ */
+void
+os_msys_reset(void)
+{
+    STAILQ_INIT(&g_msys_pool_list);
+}
+
 static struct os_mbuf_pool *
 _os_msys_find_pool(uint16_t dsize) 
 {
@@ -185,17 +197,19 @@ err:
 
 
 struct os_mbuf *
-os_msys_get_pkthdr(uint16_t dsize, uint16_t pkthdr_len)
+os_msys_get_pkthdr(uint16_t dsize, uint16_t user_hdr_len)
 {
+    uint16_t total_pkthdr_len;
     struct os_mbuf *m;
     struct os_mbuf_pool *pool;
 
-    pool = _os_msys_find_pool(dsize + pkthdr_len);
+    total_pkthdr_len =  user_hdr_len + sizeof(struct os_mbuf_pkthdr);
+    pool = _os_msys_find_pool(dsize + total_pkthdr_len);
     if (!pool) {
         goto err;
     }
     
-    m = os_mbuf_get_pkthdr(pool, pkthdr_len);
+    m = os_mbuf_get_pkthdr(pool, user_hdr_len);
     return (m);
 err:
     return (NULL);
@@ -257,15 +271,15 @@ err:
 
 /* Allocate a new packet header mbuf out of the os_mbuf_pool */ 
 struct os_mbuf *
-os_mbuf_get_pkthdr(struct os_mbuf_pool *omp, uint8_t extra_pkthdr_len)
+os_mbuf_get_pkthdr(struct os_mbuf_pool *omp, uint8_t user_pkthdr_len)
 {
     struct os_mbuf_pkthdr *pkthdr;
     struct os_mbuf *om;
 
     om = os_mbuf_get(omp, 0);
     if (om) {
-        om->om_pkthdr_len = extra_pkthdr_len + sizeof(struct os_mbuf_pkthdr);
-        om->om_data += extra_pkthdr_len + sizeof(struct os_mbuf_pkthdr);
+        om->om_pkthdr_len = user_pkthdr_len + sizeof(struct os_mbuf_pkthdr);
+        om->om_data += user_pkthdr_len + sizeof(struct os_mbuf_pkthdr);
 
         pkthdr = OS_MBUF_PKTHDR(om);
         pkthdr->omp_len = 0;
@@ -388,7 +402,7 @@ os_mbuf_append(struct os_mbuf *om, const void *data,  uint16_t len)
             space = remainder;
         }
 
-        memcpy(OS_MBUF_DATA(last, void *) + last->om_len , data, space);
+        memcpy(OS_MBUF_DATA(last, uint8_t *) + last->om_len , data, space);
 
         last->om_len += space;
         data += space;
@@ -405,7 +419,7 @@ os_mbuf_append(struct os_mbuf *om, const void *data,  uint16_t len)
         }
 
         new->om_len = min(omp->omp_databuf_len, remainder);
-        memcpy(OS_MBUF_DATA(om, void *), data, new->om_len);
+        memcpy(OS_MBUF_DATA(new, void *), data, new->om_len);
         data += new->om_len;
         remainder -= new->om_len;
         SLIST_NEXT(last, om_next) = new;

@@ -1,17 +1,20 @@
 /**
- * Copyright (c) 2015 Runtime Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "os/os.h"
@@ -67,44 +70,6 @@ os_sched_insert(struct os_task *t)
 
     return (0);
 err:
-    return (rc);
-}
-
-/**
- * Walk all the active tasks currently being scheduled.
- *
- * @param walk_func The walk function to call for each task
- * @param arg       The argument to pass the walk function
- *
- * @return 0 on success, < 0 on abort.
- */
-int
-os_sched_walk(os_sched_walk_func_t walk_func, void *arg)
-{
-    struct os_task *t;
-    os_sr_t sr;
-    int rc;
-
-    /* Go through tasks and fill out the info blocks
-     */
-    OS_ENTER_CRITICAL(sr);
-    TAILQ_FOREACH(t, &g_os_run_list, t_os_list) {
-        rc = walk_func(t, arg);
-        if (rc != 0) {
-            goto done;
-        }
-    }
-
-    TAILQ_FOREACH(t, &g_os_sleep_list, t_os_list) {
-        rc = walk_func(t, arg);
-        if (rc != 0) {
-            goto done;
-        }
-    }
-
-done:
-    OS_EXIT_CRITICAL(sr);
-
     return (rc);
 }
 

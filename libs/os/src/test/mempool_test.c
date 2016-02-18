@@ -1,17 +1,20 @@
 /**
- * Copyright (c) 2015 Runtime Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 #include <stdio.h>
 #include <string.h>
@@ -63,6 +66,7 @@ mempool_test(int num_blocks, int block_size)
     int cnt;
     int true_block_size;
     int mem_pool_size;
+    uint32_t test_block;
     uint8_t *tstptr;
     void **free_ptr;
     void *block;
@@ -187,6 +191,22 @@ mempool_test(int num_blocks, int block_size)
 
     TEST_ASSERT(os_memblock_get(NULL) == NULL,
                 "No error trying to get a block from NULL pool");
+
+    /* Attempt to free a block outside the range of the membuf */
+    test_block = g_TstMempool.mp_membuf_addr;
+    test_block -= 4;
+    rc = os_memblock_put(&g_TstMempool, (void *)test_block);
+    TEST_ASSERT(rc == OS_INVALID_PARM, "No error freeing bad block address");
+
+    test_block += (true_block_size * g_TstMempool.mp_num_blocks) + 100;
+    rc = os_memblock_put(&g_TstMempool, (void *)test_block);
+    TEST_ASSERT(rc == OS_INVALID_PARM, "No error freeing bad block address");
+
+    /* Attempt to free on bad boundary */
+    test_block = g_TstMempool.mp_membuf_addr;
+    test_block += (true_block_size / 2);
+    rc = os_memblock_put(&g_TstMempool, (void *)test_block);
+    TEST_ASSERT(rc == OS_INVALID_PARM, "No error freeing bad block address");
 }
 
 /**

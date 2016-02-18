@@ -1,6 +1,0 @@
-egg.name: hw/hal
-egg.vers: 0.1 
-egg.deps: libs/os
-egg.deps.NFFS:
-    - fs/nffs
-egg.cflags.NFFS: -DNFFS_PRESENT

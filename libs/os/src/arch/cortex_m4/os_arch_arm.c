@@ -1,17 +1,20 @@
 /**
- * Copyright (c) 2015 Runtime Inc.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "os/os.h"
@@ -222,7 +225,7 @@ os_arch_os_init(void)
          */
         os_set_env();
 
-        /* Check if priviledged or not */
+        /* Check if privileged or not */
         if ((__get_CONTROL() & 1) == 0) {
             os_arch_init();
         } else {
@@ -287,6 +290,13 @@ static inline void svc_os_arch_start(void)
     SVC_Call(os_arch_start);
 }
 
+/**
+ * Start the OS. First check to see if we are running with the correct stack 
+ * pointer set (PSP) and privilege mode (PRIV). 
+ * 
+ * 
+ * @return os_error_t 
+ */
 os_error_t
 os_arch_os_start(void)
 {
@@ -312,14 +322,20 @@ os_arch_os_start(void)
             err = OS_ERR_PRIV;
             break;
         case 0x02:
-            /* Privileged Thread mode w/SP = PSP */
-            if ((os_flags & 1) == 0) {
+            /* 
+             * We are running in Privileged Thread mode w/SP = PSP but we
+             * are supposed to be un-privileged.
+             */
+            if ((os_flags & 1) == OS_RUN_UNPRIV) {
                 err = OS_ERR_PRIV;
             }
             break;
         case 0x03:
-            /* Unpriviliged thread mode w/sp = PSP */
-            if  (os_flags & 1) {
+            /* 
+             * We are running in Unprivileged Thread mode w/SP = PSP but we
+             * are supposed to be privileged.
+             */
+            if  ((os_flags & 1) == OS_RUN_PRIV) {
                 err = OS_ERR_PRIV;
             }
             break;

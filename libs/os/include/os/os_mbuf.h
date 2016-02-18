@@ -1,17 +1,20 @@
 /**
- * Copyright (c) 2015 Runtime Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 #ifndef _OS_MBUF_H 
@@ -147,6 +150,22 @@ struct os_mqueue {
 #define OS_MBUF_DATA(__om, __type) \
      (__type) ((__om)->om_data)
 
+/**
+ * Access the "user header" in the head of an mbuf chain.
+ *
+ * @param om                    Pointer to the head of an mbuf chain.
+ */
+#define OS_MBUF_USRHDR(om)                              \
+    (void *)((uint8_t *)om + sizeof (struct os_mbuf) +  \
+             sizeof (struct os_mbuf_pkthdr))
+
+/**
+ * Retrieves the length of the user header in an mbuf.
+ *
+ * @param om                    Pointer to the mbuf to query.
+ */
+#define OS_MBUF_USRHDR_LEN(om) \
+    ((om)->om_pkthdr_len - sizeof (struct os_mbuf_pkthdr))
 
 /*
  * Called by OS_MBUF_LEADINGSPACE() macro
@@ -220,9 +239,11 @@ int os_msys_register(struct os_mbuf_pool *);
 /* Return a mbuf from the system pool, given an indicative mbuf size */
 struct os_mbuf *os_msys_get(uint16_t dsize, uint16_t leadingspace);
 
-/* Return a packet header mbuf from the system pool */
-struct os_mbuf *os_msys_get_pkthdr(uint16_t dsize, uint16_t pkthdr_len);
+/* De-registers all mbuf pools from msys. */
+void os_msys_reset(void);
 
+/* Return a packet header mbuf from the system pool */
+struct os_mbuf *os_msys_get_pkthdr(uint16_t dsize, uint16_t user_hdr_len);
 
 /* Initialize a mbuf pool */
 int os_mbuf_pool_init(struct os_mbuf_pool *, struct os_mempool *mp, 

@@ -1,20 +1,31 @@
 /**
- * Copyright (c) 2015 Runtime Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "os/os.h"
+
+#include <string.h>
+#include <assert.h>
+
+#define OS_MEMPOOL_TRUE_BLOCK_SIZE(bsize)   OS_ALIGN(bsize, OS_ALIGNMENT)
+
+STAILQ_HEAD(, os_mempool) g_os_mempool_list = 
+    STAILQ_HEAD_INITIALIZER(g_os_mempool_list);
 
 /**
  * os mempool init
@@ -46,12 +57,13 @@ os_mempool_init(struct os_mempool *mp, int blocks, int block_size, void *membuf,
     if (((uint32_t)membuf & (OS_ALIGNMENT - 1)) != 0) {
         return OS_MEM_NOT_ALIGNED;
     }
-    true_block_size = OS_ALIGN(block_size, OS_ALIGNMENT);
+    true_block_size = OS_MEMPOOL_TRUE_BLOCK_SIZE(block_size);
 
     /* Initialize the memory pool structure */
     mp->mp_block_size = block_size;
     mp->mp_num_free = blocks;
     mp->mp_num_blocks = blocks;
+    mp->mp_membuf_addr = (uint32_t)membuf;
     mp->name = name;
     SLIST_FIRST(mp) = membuf;
 
@@ -67,6 +79,8 @@ os_mempool_init(struct os_mempool *mp, int blocks, int block_size, void *membuf,
 
     /* Last one in the list should be NULL */
     SLIST_NEXT(block_ptr, mb_next) = NULL;
+
+    STAILQ_INSERT_TAIL(&g_os_mempool_list, mp, mp_list);
 
     return OS_OK;
 }
@@ -120,11 +134,27 @@ os_memblock_get(struct os_mempool *mp)
 os_error_t
 os_memblock_put(struct os_mempool *mp, void *block_addr)
 {
-    struct os_memblock *block;
     os_sr_t sr;
+    uint32_t end;
+    uint32_t true_block_size;
+    uint32_t baddr32;
+    struct os_memblock *block;
 
     /* Make sure parameters are valid */
     if ((mp == NULL) || (block_addr == NULL)) {
+        return OS_INVALID_PARM;
+    }
+
+    /* Check that the block we are freeing is a valid block! */
+    baddr32 = (uint32_t)block_addr;
+    true_block_size = OS_MEMPOOL_TRUE_BLOCK_SIZE(mp->mp_block_size);
+    end = mp->mp_membuf_addr + (mp->mp_num_blocks * true_block_size);
+    if ((baddr32 < mp->mp_membuf_addr) || (baddr32 >= end)) {
+        return OS_INVALID_PARM;
+    }
+
+    /* All freed blocks should be on true block size boundaries! */
+    if (((baddr32 - mp->mp_membuf_addr) % true_block_size) != 0) {
         return OS_INVALID_PARM;
     }
 
@@ -148,3 +178,28 @@ os_memblock_put(struct os_mempool *mp, void *block_addr)
 
     return OS_OK;
 }
+
+
+struct os_mempool *
+os_mempool_info_get_next(struct os_mempool *mp, struct os_mempool_info *omi)
+{
+    struct os_mempool *cur;
+
+    if (mp == NULL) {
+        cur = STAILQ_FIRST(&g_os_mempool_list);
+    } else {
+        cur = STAILQ_NEXT(mp, mp_list);
+    }
+
+    if (cur == NULL) {
+        return (NULL);
+    }
+
+    omi->omi_block_size = cur->mp_block_size;
+    omi->omi_num_blocks = cur->mp_num_blocks;
+    omi->omi_num_free = cur->mp_num_free;
+    strncpy(omi->omi_name, cur->name, sizeof(omi->omi_name));
+
+    return (cur);
+}
+

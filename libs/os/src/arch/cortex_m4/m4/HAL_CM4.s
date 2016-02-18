@@ -1,17 +1,20 @@
 /**
- * Copyright (c) 2015 Runtime Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 /*----------------------------------------------------------------------------
@@ -55,7 +58,11 @@
 
 /*--------------------------- os_set_env ------------------------------------*/
 #       void os_set_env (void);
-        /* Switch to Unprivileged/Privileged Thread mode, use PSP. */
+#
+#   Called to switch to privileged or unprivileged thread mode. The variable
+#   'os_flags' contains the CONTROL bit LSB to set the device into the
+#   proper mode. We also use PSP so we set bit 1 (the SPSEL bit) to 1.
+#
 
         .thumb_func
         .type   os_set_env, %function
@@ -64,14 +71,11 @@ os_set_env:
         .fnstart
         .cantunwind
 
-        MOV     R0,SP                   /* PSP = MSP */
+        MOV     R0,SP           /* Copy MSP to PSP */
         MSR     PSP,R0
         LDR     R0,=os_flags
         LDRB    R0,[R0]
-        LSLS    R0,#31
-        ITE     NE
-        MOVNE   R0,#0x02                /* Privileged Thread mode, use PSP */
-        MOVEQ   R0,#0x03                /* Unprivileged Thread mode, use PSP */
+        ADDS    R0, R0, #2
         MSR     CONTROL,R0
         ISB
         BX      LR
@@ -201,6 +205,7 @@ SysTick_Handler:
         .fnend
         .size   SysTick_Handler, .-SysTick_Handler
 
+/*-------------------------- Defalt IRQ --------------------------------*/
         .thumb_func
         .type   os_default_irq_asm, %function
         .global os_default_irq_asm
