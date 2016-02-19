@@ -200,3 +200,5 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
+This product bundles queue.h 8.5, which is available under the "3-clause BSD"
+license.  For details, see libs/os/include/os/queue.h.
