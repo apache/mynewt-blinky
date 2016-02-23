@@ -53,10 +53,10 @@ the layout of the tadpole repository.
 ## Updating Tadpole 
 
 Development of the core operating system is done on larva, which contains the 
-core of the OS.  In order to update the tadpole repository, the make\_tadpole
+core of the OS.  In order to update the tadpole repository, the hatch\_tadpole
 script must be run: 
 
-    $ cd larva;
+    $ cd larva
     $ ./scripts/hatch_tadpole.sh ~/dev/larva ~/dev/tadpole 
 
 Where ~/dev/larva is your larva directory, and ~/dev/tadpole is your tadpole directory. 
