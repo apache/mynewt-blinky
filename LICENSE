@@ -199,18 +199,3 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
-This product bundles queue.h 8.5, which is available under the "3-clause BSD"
-license.  For details, see libs/os/include/os/queue.h.
-
-This product partly derives from FreeBSD, which is available under the
-"3-clause BSD" license.  For details, see:
-    * libs/os/src/os_mbuf.c
-    * libs/util/src/base64.c
-
-This product bundles parts of CMSIS-CORE, which is available under the
-"3-clause BSD" license.  Bundled files are:
-    * libs/os/src/arch/cortex_m0/m0/HAL_CM0.s
-    * libs/os/src/arch/cortex_m0/m0/SVC_Table.s
-    * libs/os/src/arch/cortex_m4/m4/HAL_CM4.s
-    * libs/os/src/arch/cortex_m4/m4/SVC_Table.s

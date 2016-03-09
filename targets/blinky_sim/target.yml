@@ -1,0 +1,6 @@
+### Target: blinky_sim
+
+target.app: "apps/blinky"
+target.arch: "sim"
+target.bsp: "@apache-mynewt-world/hw/bsp/native"
+target.build_profile: "debug"
