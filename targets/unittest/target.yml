@@ -1,6 +1,6 @@
 ### Target: unittest
 
 target.arch: "sim"
-target.bsp: "@apache-mynewt-world/hw/bsp/native"
-target.compiler: "@apache-mynewt-world/compiler/sim"
+target.bsp: "@apache-mynewt-core/hw/bsp/native"
+target.compiler: "@apache-mynewt-core/compiler/sim"
 target.build_profile: "debug"

@@ -2,5 +2,5 @@
 
 target.app: "apps/blinky"
 target.arch: "sim"
-target.bsp: "@apache-mynewt-world/hw/bsp/native"
+target.bsp: "@apache-mynewt-core/hw/bsp/native"
 target.build_profile: "debug"
