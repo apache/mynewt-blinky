@@ -1,5 +1,4 @@
-### Target: blinky_sim
-
+### Target: targets/my_blinky_sim
 target.app: "apps/blinky"
 target.arch: "sim"
 target.bsp: "@apache-mynewt-core/hw/bsp/native"
