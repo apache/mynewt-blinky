@@ -31,7 +31,7 @@ int init_tasks(void);
 
 /* Task 1 */
 #define BLINKY_TASK_PRIO (1)
-#define BLINKY_STACK_SIZE    OS_STACK_ALIGN(1024)
+#define BLINKY_STACK_SIZE    OS_STACK_ALIGN(256)
 
 struct os_task blinky_task;
 os_stack_t blinky_stack[BLINKY_STACK_SIZE];
@@ -45,7 +45,6 @@ blinky_task_handler(void *arg)
 {
     struct os_task *t;
 
-    /* Set the led pin for the E407 devboard */
     g_led_pin = LED_BLINK_PIN;
     hal_gpio_init_out(g_led_pin, 1);
 
