@@ -19,7 +19,28 @@
 #
 -->
 
-# README 
+# Apache Blinky
 
-Welcome!  This is your new Apache Mynewt project.  For more information
-on Apache Mynewt, please visit https://mynewt.apache.org/.
+## Overview
+
+Apache Blinky is a skeleton for new Apache Mynewt projects.  This directory
+struture is downloaded when the user issues a "newt new" command.  Apache
+blinky also contains an example Apache Mynewt app and target to help you get
+started.
+
+## Building
+
+Apache Blinky contains an example Apache Mynewt application called blinky.  This application blinks an LED on the host board.  The below procedure describes how to build this application for the Apache Mynewt simulator.
+
+1. Download Apache Newt.
+
+You will need to download the Apache Newt tool, as documented in the [Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
+
+2. Build the blinky app for the sim platform using the "my_blinky_sim" target
+(executed from the blinky directory).
+
+```no-highlight
+    $ newt build my_blinky_sim
+```
+
+The Apache Newt tool should indicate the location of the generated blinky executable.  Since the simulator does not have an LED to blink, this version of blinky is not terribly exciting (no observable behavior!).  To learn how to build blinky for actual harder, please see the [Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
