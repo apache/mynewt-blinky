@@ -39,7 +39,13 @@ Apache Mynewt simulator.
 
 You will need to download the Apache Newt tool, as documented in the [Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
 
-2. Build the blinky app for the sim platform using the "my_blinky_sim" target
+2. Download the Apache Mynewt Core package (executed from the blinky directory).
+
+```no-highlight
+    $ newt install
+```
+
+3. Build the blinky app for the sim platform using the "my_blinky_sim" target
 (executed from the blinky directory).
 
 ```no-highlight
