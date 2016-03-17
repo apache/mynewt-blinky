@@ -23,16 +23,19 @@
 
 ## Overview
 
-Apache Blinky is a skeleton for new Apache Mynewt projects.  This directory
-struture is downloaded when the user issues a "newt new" command.  Apache
-blinky also contains an example Apache Mynewt app and target to help you get
-started.
+Apache Blinky is a skeleton for new Apache Mynewt projects.  The user downloads
+this skeleton by issuing the "newt new" command (using Apache Newt).  Apache
+blinky also contains an example app and target for use with Apache Mynewt to
+help you get started.
 
 ## Building
 
-Apache Blinky contains an example Apache Mynewt application called blinky.  This application blinks an LED on the host board.  The below procedure describes how to build this application for the Apache Mynewt simulator.
+Apache Blinky contains an example Apache Mynewt application called blinky.
+When executed on suitably equipped hardware, this application repeatedly blinks
+an LED.  The below procedure describes how to build this application for the
+Apache Mynewt simulator.
 
-1. Download Apache Newt.
+1. Download and install Apache Newt.
 
 You will need to download the Apache Newt tool, as documented in the [Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
 
@@ -43,4 +46,8 @@ You will need to download the Apache Newt tool, as documented in the [Getting St
     $ newt build my_blinky_sim
 ```
 
-The Apache Newt tool should indicate the location of the generated blinky executable.  Since the simulator does not have an LED to blink, this version of blinky is not terribly exciting (no observable behavior!).  To learn how to build blinky for actual harder, please see the [Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
+The Apache Newt tool should indicate the location of the generated blinky
+executable.  Since the simulator does not have an LED to blink, this version of
+blinky is not terribly exciting (no observable behavior!).  To learn how to
+build blinky for actual hardware, please see the [Getting Started
+Guide](http://mynewt.apache.org/os/get_started/introduction/).
