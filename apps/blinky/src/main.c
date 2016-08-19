@@ -55,7 +55,7 @@ blinky_task_handler(void *arg)
         ++g_task1_loops;
 
         /* Wait one second */
-        os_time_delay(1000);
+        os_time_delay(OS_TICKS_PER_SEC);
 
         /* Toggle the LED */
         hal_gpio_toggle(g_led_pin);
