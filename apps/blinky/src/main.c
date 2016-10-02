@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+#include <assert.h>
+#include <string.h>
+
+#include "sysinit/sysinit.h"
 #include "os/os.h"
 #include "bsp/bsp.h"
 #include "hal/hal_gpio.h"
-#include <assert.h>
-#include <string.h>
 #ifdef ARCH_sim
-#include <mcu/mcu_sim.h>
+#include "mcu/mcu_sim.h"
 #endif
 
 /* Init all tasks */
@@ -99,7 +102,7 @@ main(int argc, char **argv)
     mcu_sim_parse_args(argc, argv);
 #endif
 
-    os_init();
+    sysinit();
 
     rc = init_tasks();
     os_start();
