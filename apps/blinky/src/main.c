@@ -28,68 +28,16 @@
 #include "mcu/mcu_sim.h"
 #endif
 
-/* Init all tasks */
-volatile int tasks_initialized;
-int init_tasks(void);
-
-/* Task 1 */
-#define BLINKY_TASK_PRIO (1)
-#define BLINKY_STACK_SIZE    OS_STACK_ALIGN(256)
-
-struct os_task blinky_task;
-os_stack_t blinky_stack[BLINKY_STACK_SIZE];
 static volatile int g_task1_loops;
 
 /* For LED toggling */
 int g_led_pin;
 
-void
-blinky_task_handler(void *arg)
-{
-    struct os_task *t;
-
-    g_led_pin = LED_BLINK_PIN;
-    hal_gpio_init_out(g_led_pin, 1);
-
-    while (1) {
-        t = os_sched_get_current_task();
-        assert(t->t_func == blinky_task_handler);
-
-        ++g_task1_loops;
-
-        /* Wait one second */
-        os_time_delay(OS_TICKS_PER_SEC);
-
-        /* Toggle the LED */
-        hal_gpio_toggle(g_led_pin);
-    }
-}
-
-/**
- * init_tasks
- *
- * Called by main.c after os_init(). This function performs initializations
- * that are required before tasks are running.
- *
- * @return int 0 success; error otherwise.
- */
-int
-init_tasks(void)
-{
-    os_task_init(&blinky_task, "blinky", blinky_task_handler, NULL,
-            BLINKY_TASK_PRIO, OS_WAIT_FOREVER, blinky_stack, BLINKY_STACK_SIZE);
-
-    tasks_initialized = 1;
-
-    return 0;
-}
-
 /**
  * main
  *
- * The main function for the project. This function initializes the os, calls
- * init_tasks to initialize tasks (and possibly other objects), then starts the
- * OS. We should not return from os start.
+ * The main task for the project. This function initializes packages,
+ * and then blinks the BSP LED in a loop.
  *
  * @return int NOTE: this function should never return!
  */
@@ -104,10 +52,18 @@ main(int argc, char **argv)
 
     sysinit();
 
-    rc = init_tasks();
-    os_start();
+    g_led_pin = LED_BLINK_PIN;
+    hal_gpio_init_out(g_led_pin, 1);
 
-    /* os start should never return. If it does, this should be an error */
+    while (1) {
+        ++g_task1_loops;
+
+        /* Wait one second */
+        os_time_delay(OS_TICKS_PER_SEC);
+
+        /* Toggle the LED */
+        hal_gpio_toggle(g_led_pin);
+    }
     assert(0);
 
     return rc;
