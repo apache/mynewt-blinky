@@ -25,8 +25,10 @@ project.repositories:
 # Use github's distribution mechanism for core ASF libraries.
 # This provides mirroring automatically for us.
 #
+# if you want to stay up to date with the latest version of 1.0
+# change 1.0.0 to "1-latest"
 repository.apache-mynewt-core:
     type: github
-    vers: 1-latest
+    vers: 1.0.0
     user: apache
     repo: mynewt-core
