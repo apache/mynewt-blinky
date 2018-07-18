@@ -37,7 +37,7 @@ Apache Mynewt simulator.
 
 1. Download and install Apache Newt.
 
-You will need to download the Apache Newt tool, as documented in the [Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
+You will need to download the Apache Newt tool, as documented in the [Getting Started Guide](https://mynewt.apache.org/latest/get_started/index.html).
 
 2. Download the Apache Mynewt Core package (executed from the blinky directory).
 
@@ -56,4 +56,4 @@ The Apache Newt tool should indicate the location of the generated blinky
 executable.  Since the simulator does not have an LED to blink, this version of
 blinky is not terribly exciting - a printed message indicating the current LED
 state.  To learn how to build blinky for actual hardware, please see the
-[Getting Started Guide](http://mynewt.apache.org/os/get_started/introduction/).
+[Getting Started Guide](https://mynewt.apache.org/latest/get_started/index.html).
