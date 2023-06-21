@@ -24,9 +24,6 @@
 #include "os/os.h"
 #include "bsp/bsp.h"
 #include "hal/hal_gpio.h"
-#ifdef ARCH_sim
-#include "mcu/mcu_sim.h"
-#endif
 
 static volatile int g_task1_loops;
 
@@ -42,13 +39,9 @@ int g_led_pin;
  * @return int NOTE: this function should never return!
  */
 int
-main(int argc, char **argv)
+mynewt_main(int argc, char **argv)
 {
     int rc;
-
-#ifdef ARCH_sim
-    mcu_sim_parse_args(argc, argv);
-#endif
 
     sysinit();
 
