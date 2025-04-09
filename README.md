@@ -25,7 +25,7 @@
 
 Apache Blinky is a skeleton for new Apache Mynewt projects.  The user downloads
 this skeleton by issuing the "newt new" command (using Apache Newt).  Apache
-blinky also contains an example app and target for use with Apache Mynewt to
+Blinky also contains an example app and target for use with Apache Mynewt to
 help you get started.
 
 ## Building
@@ -42,7 +42,7 @@ You will need to download the Apache Newt tool, as documented in the [Getting St
 2. Download the Apache Mynewt Core package (executed from the blinky directory).
 
 ```no-highlight
-    $ newt install
+    $ newt upgrade
 ```
 
 3. Build the blinky app for the sim platform using the "my_blinky_sim" target
