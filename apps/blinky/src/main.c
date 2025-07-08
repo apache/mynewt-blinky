@@ -42,6 +42,7 @@ int
 mynewt_main(int argc, char **argv)
 {
     int rc;
+    bool led_state = true;
 
     sysinit();
 
@@ -56,6 +57,11 @@ mynewt_main(int argc, char **argv)
 
         /* Toggle the LED */
         hal_gpio_toggle(g_led_pin);
+        led_state = !led_state;
+
+        if (MYNEWT_VAL(BLINKY_PRINT_LED_STATE)) {
+            printf("LED state: %s\n", led_state ? "On" : "Off");
+        }
     }
     assert(0);
 
