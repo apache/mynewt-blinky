@@ -56,6 +56,10 @@ mynewt_main(int argc, char **argv)
 
         /* Toggle the LED */
         hal_gpio_toggle(g_led_pin);
+
+        if (MYNEWT_VAL(BLINKY_PRINT_LED_STATE)) {
+            printf("LED was toggled %d times.\n", g_task1_loops);
+        }
     }
     assert(0);
 

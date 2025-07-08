@@ -20,9 +20,13 @@ syscfg.defs:
     LED_BLINK_PIN:
         description: Pin which blinks led.
         value: LED_BLINK_PIN
+    BLINKY_PRINT_LED_STATE:
+        description: Print led status.
+        value: 0
 
 syscfg.vals:
-    CONSOLE_IMPLEMENTATION: stub
     LOG_IMPLEMENTATION: stub
     STATS_IMPLEMENTATION: stub
+syscfg.vals.BLINKY_PRINT_LED_STATE:
+    CONSOLE_IMPLEMENTATION: full
 
