@@ -30,3 +30,21 @@ repository.apache-mynewt-core:
     vers: 0.0.0
     user: apache
     repo: mynewt-core
+
+# Examples how to allow or disallow repositories
+project.repositories.allowed:
+#     - nordic-nrfx
+
+project.repositories.ignored:
+#    - atmel-samd21xx
+#    - lvgl
+#    - liblc3
+#    - tinyusb
+#    # Examples of simple pattern matching
+#    - stm-cmsis_device_w*
+#    - stm-cmsis_device_l*
+#    - nxp*
+#    - blues*
+#    # Examples of regular expresion
+#    - ~stm-stm32[wl].xx_hal_driver
+#    - ~cirr.*
